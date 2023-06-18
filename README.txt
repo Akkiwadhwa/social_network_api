@@ -42,8 +42,6 @@ User Login: POST /api/login/
 Get User Data: GET /api/user/
 Create a Post: POST /api/posts/
 Retrieve, Update, or Delete a Post: GET/PUT/DELETE /api/posts/<post_id>/
-Like a Post: POST /api/posts/<post_id>/like/
-Unlike a Post: POST /api/posts/<post_id>/unlike/
 
 python manage.py test
 
