@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime
 from .serializers import UserSerializer, PostSerializer
 from .models import User, Post
 from django.conf import settings
@@ -28,19 +29,17 @@ class UserSignupView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
-            
-            # Validate email formatting
-            if not is_valid_email(email):
-                return Response({"error": "Invalid email format"}, status=status.HTTP_400_BAD_REQUEST)
+            username = serializer.validated_data['username']
             
             # Enrich User with geolocation data asynchronously
-            enrich_user_geolocation(email, request.META.get('REMOTE_ADDR'))
+            geolocation = enrich_user_geolocation(email, request.META.get('REMOTE_ADDR'))
+            print(geolocation)
             
             # Check if signup coincides with a holiday
-            is_holiday = check_holiday_signup(email)
-            
+            bool_holiday = check_holiday_signup(email,geolocation)
+            print(bool_holiday)
             # Create User
-            user = User.objects.create_user(email=email, password=password, is_holiday=is_holiday)
+            user = User.objects.create_user(email=email, password=password,username=username,geolocation=geolocation,is_holiday=bool_holiday)
             
             return Response({"message": "User signed up successfully"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -128,16 +127,24 @@ def enrich_user_geolocation(email, ip_address):
     url = f"https://ipgeolocation.abstractapi.com/v1/?api_key={settings.ABSTRACT_API_KEY}&ip_address={ip_address}"
     response = requests.get(url)
     if response.status_code == 200:
-        geolocation = response.json().get("country")
-        try:
-            user = User.objects.get(email=email)
-            user.geolocation = geolocation
-            user.save()
-        except ObjectDoesNotExist:
-            pass
+        geolocation = response.json().get("country_code",None)
+        return geolocation
+    else:
+        return None
 
-def check_holiday_signup(email):
-    # Check if the signup date coincides with a holiday in the User's country
-    # Use the geolocation or any other available information to determine the country
-    # Return True if it's a holiday signup, False otherwise
-    pass
+def check_holiday_signup(email,geolocation):
+    # Get today's date
+    if geolocation:
+        today = datetime.now()
+        year = today.year
+        month = today.month
+        day = today.day
+        url = f"https://holidays.abstractapi.com/v1/?api_key=dc3283fcf6a24e179124907dcd757374&country={geolocation}&year={year}&month={month}&day={day}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            if response.json():
+                return True
+            else:
+                return False
+    else:
+        return None

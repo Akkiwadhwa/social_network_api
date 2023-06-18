@@ -135,7 +135,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-ABSTRACT_API_KEY = ""
+ABSTRACT_API_KEY = "" #enter you abstract api key here
 
 
 # Static files (CSS, JavaScript, Images)

@@ -6,7 +6,8 @@ from django.contrib.auth.models import Permission
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, validators=[EmailValidator()])  # Add email validator
-    password = models.CharField(max_length=128)  # Add password field
+    password = models.CharField(max_length=128)
+    username = models.CharField(max_length=255, blank=True, null=True)
     geolocation = models.CharField(max_length=255, blank=True, null=True)
     is_holiday = models.BooleanField(default=False)
     groups = models.ManyToManyField(
